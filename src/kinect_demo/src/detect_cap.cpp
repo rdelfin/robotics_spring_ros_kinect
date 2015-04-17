@@ -1,6 +1,7 @@
 #include "ros/ros.h"
 #include "std_msgs/String.h"
 #include "sensor_msgs/PointCloud2.h"
+#include "geometry_msgs/Vector3.h"
 #include <pcl/point_types.h>
 #include <pcl_ros/transforms.h>
 #include <pcl/conversions.h>
@@ -60,7 +61,7 @@ PointCloudT::Ptr computeNeonVoxels(PointCloudT::Ptr in) {
         // Look for mostly neon value points
         if (g > 150 && (r + b) < 250) {
 			temp_neon_cloud->push_back(in->points[i]);
-	    }
+		}
     }
 
     return temp_neon_cloud;
@@ -76,7 +77,8 @@ int main (int argc, char** argv)
 	ros::Subscriber sub = nh.subscribe ("/nav_kinect/depth_registered/points", 1000, cloud_sub);
 
 	//debugging publisher --> can create your own topic and then subscribe to it through rviz
-	ros::Publisher cloud_pub = nh.advertise<sensor_msgs::PointCloud2>("detect_cap/cloud", 10);
+	ros::Publisher cloud_pub = nh.advertise<sensor_msgs::PointCloud2>("detect_cap/cloud", 100);
+	ros::Publisher centroid_pub = nh.advertise<geometry_msgs::Vector3>("detect_cap/centroid", 100);
 
 	//refresh rate
 	double ros_rate = 3.0;
@@ -118,7 +120,12 @@ int main (int argc, char** argv)
 			// Find the centroid of the neon cap
 			Eigen::Vector4f centroid;
 			pcl::compute3DCentroid(*neon_cloud, centroid);
-
+			geometry_msgs::Vector3 centroid_msg;
+			centroid_msg.x = centroid(0);
+			centroid_msg.y = centroid(1);
+			centroid_msg.z = centroid(2);
+			centroid_pub.publish(centroid_msg);
+			
 			ROS_INFO("The centroid of the neon cap is: (%f, %f, %f)", centroid(0), centroid(1), centroid(2));
 
 		}
