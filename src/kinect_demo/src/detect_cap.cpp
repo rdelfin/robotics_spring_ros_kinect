@@ -36,9 +36,9 @@ void cloud_sub(const sensor_msgs::PointCloud2ConstPtr& msg)
 
 		//state that a new cloud is available
 		new_cloud_available_flag = true;
-		 
+
 		/**PointCloudT::iterator myIterator;
-		for(myIterator = cloud->begin();  
+		for(myIterator = cloud->begin();
 			myIterator != cloud->end();
 			myIterator++)
 		{
@@ -48,7 +48,7 @@ void cloud_sub(const sensor_msgs::PointCloud2ConstPtr& msg)
 
 PointCloudT::Ptr computeNeonVoxels(PointCloudT::Ptr in) {
     int total_neon = 0;
-    
+
     //Point Cloud to store out neon cap
 	PointCloudT::Ptr temp_neon_cloud (new PointCloudT);
 
@@ -73,25 +73,25 @@ int main (int argc, char** argv)
 	ros::NodeHandle nh;
 
 	// Create a ROS subscriber for the input point cloud
-	ros::Subscriber sub = nh.subscribe ("/camera/depth_registered/points", 1000, cloud_sub);
-	
+	ros::Subscriber sub = nh.subscribe ("/nav_kinect/depth_registered/points", 1000, cloud_sub);
+
 	//debugging publisher --> can create your own topic and then subscribe to it through rviz
 	ros::Publisher cloud_pub = nh.advertise<sensor_msgs::PointCloud2>("detect_cap/cloud", 10);
-	
+
 	//refresh rate
 	double ros_rate = 3.0;
 	ros::Rate r(ros_rate);
-	
+
 	while (ros::ok())
 	{
 		ros::spinOnce();
 		r.sleep();
-		
+
 		if (new_cloud_available_flag){
 			new_cloud_available_flag = false;
-			
+
 			ROS_INFO("Before voxel grid filter: %i points",(int)cloud->points.size());
-			
+
 			// Voxel Grid reduces the computation time. Its a good idea to do it if you will be doing
 			//sequential processing or frame-by-frame
 			// Create the filtering object: downsample the dataset using a leaf size of 1cm
@@ -100,29 +100,29 @@ int main (int argc, char** argv)
 			vg.setInputCloud (cloud);
 			vg.setLeafSize (0.005f, 0.005f, 0.005f);
 			vg.filter (*cloud_filtered);
-			
+
 			ROS_INFO("After voxel grid filter: %i points",(int)cloud_filtered->points.size());
-			
+
 			int max_num_neon = 0;
-			
+
 			//Send the filtered point cloud to be processed in order to get the neon blob
 			neon_cloud = computeNeonVoxels(cloud_filtered);
-			
+
 			//Publish the cloud with the neon cap
 			pcl::toROSMsg(*neon_cloud,cloud_ros);
-			
+
 			//Set the frame ID to the first cloud we took in coz we want to replace that one
 			cloud_ros.header.frame_id = cloud->header.frame_id;
 			cloud_pub.publish(cloud_ros);
-			
+
 			// Find the centroid of the neon cap
 			Eigen::Vector4f centroid;
 			pcl::compute3DCentroid(*neon_cloud, centroid);
-			
+
 			ROS_INFO("The centroid of the neon cap is: (%f, %f, %f)", centroid(0), centroid(1), centroid(2));
-			
+
 		}
 	}
-	
+
 	return 0;
 }
