@@ -8,6 +8,7 @@ find_package(catkin REQUIRED COMPONENTS
 	pcl_ros
 	pcl_conversions
 	sensor_msgs
+	geometry_msgs
 	std_msgs
 	roscpp
  	message_generation
@@ -72,6 +73,7 @@ find_package(catkin REQUIRED COMPONENTS
  DEPENDENCIES
    std_msgs
    sensor_msgs
+   geometry_msgs
   )
 
 ###################################
