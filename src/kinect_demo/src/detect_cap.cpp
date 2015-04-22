@@ -12,6 +12,7 @@
 #include <pcl_conversions/pcl_conversions.h>
 #include <pcl/conversions.h>
 #include <pcl/point_cloud.h>
+#include <cmath>
 
 // camera_link for fixed frame in global option in rviz
 
@@ -122,10 +123,14 @@ int main (int argc, char** argv)
 	    Eigen::Vector4f centroid;
 	    pcl::compute3DCentroid(*neon_cloud, centroid);
 	    geometry_msgs::Vector3 centroid_msg;
-	    centroid_msg.x = centroid(0);
-	    centroid_msg.y = centroid(1);
-	    centroid_msg.z = centroid(2);
-	    centroid_pub.publish(centroid_msg);
+	    
+	    //Same as checking if none are not a number
+	    if(!isnan(centroid(0)) && !isnan(centroid(1)) && !isnan(centroid(2))) {
+		centroid_msg.x = centroid(0);
+		centroid_msg.y = centroid(1);
+		centroid_msg.z = centroid(2);
+		centroid_pub.publish(centroid_msg);
+	    }
 	    
 	    ROS_INFO("The centroid of the neon cap is: (%f, %f, %f)", centroid(0), centroid(1), centroid(2));
 

@@ -41,21 +41,19 @@ int main(int argc, char** argv)
 }
 
 void goToCentroid(const geometry_msgs::Vector3::ConstPtr& centroid) {
-    if(centroid->x != nan() && centroid->y != nan() && centroid->z != nan()) {
-	//Try to obtain
-	tf::StampedTransform transform;
-	try{
-	    listener.lookupTransform("/base_link", "/camera_depth_optical_frame", ros::Time(0), transform);
-	}
-	catch (tf::TransformException ex){
-	    ROS_ERROR("%s",ex.what());
-	    ros::Duration(1.0).sleep();
-	    return;
-	}
-	
-	tf::Vector3 centroid_vec(centroid->x, centroid->y, centroid->z);
-	tf::Vector2 centroid_transformed = vectorTransform(centroid_vec);
-	
-	ROS_INFO("TRANSFORMED CENTROID: " + centroid_transformed.x, centroid_transformed.y, centroid_transformed.z);
+    //Try to obtain
+    tf::StampedTransform transform;
+    try{
+	listener.lookupTransform("/base_link", "/camera_depth_optical_frame", ros::Time(0), transform);
     }
+    catch (tf::TransformException ex){
+	ROS_ERROR("%s",ex.what());
+	ros::Duration(1.0).sleep();
+	return;
+    }
+    
+    tf::Vector3 centroid_vec(centroid->x, centroid->y, centroid->z);
+    tf::Vector2 centroid_transformed = vectorTransform(centroid_vec);
+    
+    ROS_INFO("TRANSFORMED CENTROID: " + centroid_transformed.x, centroid_transformed.y, centroid_transformed.z);
 }
