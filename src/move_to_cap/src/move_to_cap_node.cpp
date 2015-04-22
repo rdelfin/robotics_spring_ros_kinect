@@ -1,5 +1,6 @@
 #include "ros/ros.h"
 #include <tf/tf.h>
+#include <tf/transform_listener.h>
 #include "sensor_msgs/PointCloud2.h"
 #include "geometry_msgs/Vector3.h"
 #include "geometry_msgs/Twist.h"
@@ -16,7 +17,6 @@ int main(int argc, char** argv)
     ros::NodeHandle nh;
     
     ros::Subscriber centroid_sub = nh.subscribe("detect_cap/centroid", 100, goToCentroid);
-    tf::TransformListener listener;
     move_pub = nh.advertise<geometry_msgs::Twist>("cmd_vel", 100);
     
     ros::Rate rate(10.0);
@@ -28,6 +28,7 @@ int main(int argc, char** argv)
 
 void goToCentroid(const geometry_msgs::Vector3::ConstPtr& centroid) {
     //Try to obtain
+    tf::TransformListener listener;
     tf::StampedTransform transform;
     try{
 	listener.lookupTransform("/base_link", "/camera_depth_optical_frame", ros::Time(0), transform);
@@ -39,7 +40,7 @@ void goToCentroid(const geometry_msgs::Vector3::ConstPtr& centroid) {
     }
     
     tf::Vector3 centroid_vec(centroid->x, centroid->y, centroid->z);
-    tf::Vector3 centroid_transformed = vectorTransform(centroid_vec);
+    tf::Vector3 centroid_transformed = transform(centroid_vec);
     
     ROS_INFO("TRANSFORMED CENTROID: " + centroid_transformed.x, centroid_transformed.y, centroid_transformed.z);
 }
