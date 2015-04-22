@@ -30,21 +30,22 @@ PointCloudT::Ptr neon_cloud (new PointCloudT);
 // Message required to publish the cloud - Convert from pcl to msg
 sensor_msgs::PointCloud2 cloud_ros;
 
+
 void cloud_sub(const sensor_msgs::PointCloud2ConstPtr& msg)
 {
-		//convert the msg to PCL format
-		pcl::fromROSMsg (*msg, *cloud);
+    //convert the msg to PCL format
+    pcl::fromROSMsg (*msg, *cloud);
 
-		//state that a new cloud is available
-		new_cloud_available_flag = true;
+    //state that a new cloud is available
+    new_cloud_available_flag = true;
 
-		/**PointCloudT::iterator myIterator;
-		for(myIterator = cloud->begin();
-			myIterator != cloud->end();
-			myIterator++)
-		{
-			std::cout<<*myIterator<<" ";
-		}**/
+    /**PointCloudT::iterator myIterator;
+    for(myIterator = cloud->begin();
+	    myIterator != cloud->end();
+	    myIterator++)
+    {
+	    std::cout<<*myIterator<<" ";
+    }**/
 }
 
 PointCloudT::Ptr computeNeonVoxels(PointCloudT::Ptr in) {
@@ -54,14 +55,14 @@ PointCloudT::Ptr computeNeonVoxels(PointCloudT::Ptr in) {
 	PointCloudT::Ptr temp_neon_cloud (new PointCloudT);
 
     for (int i = 0; i < in->points.size(); i++) {
-        unsigned int r, g, b;
-        r = in->points[i].r;
-        g = in->points[i].g;
-        b = in->points[i].b;
-        // Look for mostly neon value points
-        if (g > 150 && (r + b) < 250) {
-			temp_neon_cloud->push_back(in->points[i]);
-		}
+	unsigned int r, g, b;
+	r = in->points[i].r;
+	g = in->points[i].g;
+	b = in->points[i].b;
+	// Look for mostly neon value points
+	if (g > 150 && (r + b) < 250) {
+	    temp_neon_cloud->push_back(in->points[i]);
+	}
     }
 
     return temp_neon_cloud;
@@ -69,67 +70,67 @@ PointCloudT::Ptr computeNeonVoxels(PointCloudT::Ptr in) {
 
 int main (int argc, char** argv)
 {
-	// Initialize ROS
-	ros::init (argc, argv, "kinect_fun");
-	ros::NodeHandle nh;
+    // Initialize ROS
+    ros::init (argc, argv, "kinect_fun");
+    ros::NodeHandle nh;
 
-	// Create a ROS subscriber for the input point cloud
-	ros::Subscriber sub = nh.subscribe ("/nav_kinect/depth_registered/points", 1000, cloud_sub);
+    // Create a ROS subscriber for the input point cloud
+    ros::Subscriber sub = nh.subscribe ("/camera/depth_registered/points", 1000, cloud_sub);
 
-	//debugging publisher --> can create your own topic and then subscribe to it through rviz
-	ros::Publisher cloud_pub = nh.advertise<sensor_msgs::PointCloud2>("detect_cap/cloud", 100);
-	ros::Publisher centroid_pub = nh.advertise<geometry_msgs::Vector3>("detect_cap/centroid", 100);
+    //debugging publisher --> can create your own topic and then subscribe to it through rviz
+    ros::Publisher cloud_pub = nh.advertise<sensor_msgs::PointCloud2>("detect_cap/cloud", 100);
+    ros::Publisher centroid_pub = nh.advertise<geometry_msgs::Vector3>("detect_cap/centroid", 100);
 
-	//refresh rate
-	double ros_rate = 3.0;
-	ros::Rate r(ros_rate);
+    //refresh rate
+    double ros_rate = 3.0;
+    ros::Rate r(ros_rate);
 
-	while (ros::ok())
-	{
-		ros::spinOnce();
-		r.sleep();
+    while (ros::ok())
+    {
+	ros::spinOnce();
+	r.sleep();
 
-		if (new_cloud_available_flag){
-			new_cloud_available_flag = false;
+	if (new_cloud_available_flag){
+	    new_cloud_available_flag = false;
 
-			ROS_INFO("Before voxel grid filter: %i points",(int)cloud->points.size());
+	    ROS_INFO("Before voxel grid filter: %i points",(int)cloud->points.size());
 
-			// Voxel Grid reduces the computation time. Its a good idea to do it if you will be doing
-			//sequential processing or frame-by-frame
-			// Create the filtering object: downsample the dataset using a leaf size of 1cm
-			pcl::VoxelGrid<PointT> vg;
-			pcl::PointCloud<PointT>::Ptr cloud_filtered (new pcl::PointCloud<PointT>);
-			vg.setInputCloud (cloud);
-			vg.setLeafSize (0.005f, 0.005f, 0.005f);
-			vg.filter (*cloud_filtered);
+	    // Voxel Grid reduces the computation time. Its a good idea to do it if you will be doing
+	    //sequential processing or frame-by-frame
+	    // Create the filtering object: downsample the dataset using a leaf size of 1cm
+	    pcl::VoxelGrid<PointT> vg;
+	    pcl::PointCloud<PointT>::Ptr cloud_filtered (new pcl::PointCloud<PointT>);
+	    vg.setInputCloud (cloud);
+	    vg.setLeafSize (0.005f, 0.005f, 0.005f);
+	    vg.filter (*cloud_filtered);
 
-			ROS_INFO("After voxel grid filter: %i points",(int)cloud_filtered->points.size());
+	    ROS_INFO("After voxel grid filter: %i points",(int)cloud_filtered->points.size());
 
-			int max_num_neon = 0;
+	    int max_num_neon = 0;
 
-			//Send the filtered point cloud to be processed in order to get the neon blob
-			neon_cloud = computeNeonVoxels(cloud_filtered);
+	    //Send the filtered point cloud to be processed in order to get the neon blob
+	    neon_cloud = computeNeonVoxels(cloud_filtered);
 
-			//Publish the cloud with the neon cap
-			pcl::toROSMsg(*neon_cloud,cloud_ros);
+	    //Publish the cloud with the neon cap
+	    pcl::toROSMsg(*neon_cloud,cloud_ros);
 
-			//Set the frame ID to the first cloud we took in coz we want to replace that one
-			cloud_ros.header.frame_id = cloud->header.frame_id;
-			cloud_pub.publish(cloud_ros);
+	    //Set the frame ID to the first cloud we took in coz we want to replace that one
+	    cloud_ros.header.frame_id = cloud->header.frame_id;
+	    cloud_pub.publish(cloud_ros);
 
-			// Find the centroid of the neon cap
-			Eigen::Vector4f centroid;
-			pcl::compute3DCentroid(*neon_cloud, centroid);
-			geometry_msgs::Vector3 centroid_msg;
-			centroid_msg.x = centroid(0);
-			centroid_msg.y = centroid(1);
-			centroid_msg.z = centroid(2);
-			centroid_pub.publish(centroid_msg);
-			
-			ROS_INFO("The centroid of the neon cap is: (%f, %f, %f)", centroid(0), centroid(1), centroid(2));
+	    // Find the centroid of the neon cap
+	    Eigen::Vector4f centroid;
+	    pcl::compute3DCentroid(*neon_cloud, centroid);
+	    geometry_msgs::Vector3 centroid_msg;
+	    centroid_msg.x = centroid(0);
+	    centroid_msg.y = centroid(1);
+	    centroid_msg.z = centroid(2);
+	    centroid_pub.publish(centroid_msg);
+	    
+	    ROS_INFO("The centroid of the neon cap is: (%f, %f, %f)", centroid(0), centroid(1), centroid(2));
 
-		}
 	}
+    }
 
-	return 0;
+    return 0;
 }
