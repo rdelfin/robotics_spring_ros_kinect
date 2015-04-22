@@ -42,6 +42,6 @@ void goToCentroid(const geometry_msgs::Vector3::ConstPtr& centroid) {
     tf::Vector3 centroid_vec(centroid->x, centroid->y, centroid->z);
     tf::Vector3 centroid_transformed = transform(centroid_vec);
     
-    ROS_INFO("ORIGINAL CENTROID:    (%.5f, %.5f, %.5f)", centroid->x, centroid->y, centroid->z
+    ROS_INFO("ORIGINAL CENTROID:    (%.5f, %.5f, %.5f)", centroid->x, centroid->y, centroid->z);
     ROS_INFO("TRANSFORMED CENTROID: (%.5f, %.5f, %.5f)", centroid_transformed.getX(), centroid_transformed.getY(), centroid_transformed.getZ());
 }
