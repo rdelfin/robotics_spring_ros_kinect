@@ -15,16 +15,13 @@ int main(int argc, char** argv)
     // /cmd_vel_mux/input/teleop
     ros::init(argc, argv, "move_to_cap_node");
     
-    ros::NodeHandle nh;
+    ros::NodeHandle node;
     
-    ros::Subscriber centroid_sub = nh.subscribe("detect_cap/centroid", 100, goToCentroid);
-    move_pub = nh.advertise<geometry_msgs::Twist>("cmd_vel", 100);
+    ros::Subscriber centroid_sub = node.subscribe("detect_cap/centroid", 100, goToCentroid);
+    move_pub = node.advertise<geometry_msgs::Twist>("cmd_vel", 100);
     
     ros::Rate rate(10.0);
-    while (nh.ok()){
-	ros::spinOnce();
-	rate.sleep();
-   }
+    ros::spin();
 }
 
 void goToCentroid(const geometry_msgs::Vector3::ConstPtr& centroid) {
@@ -44,14 +41,20 @@ void goToCentroid(const geometry_msgs::Vector3::ConstPtr& centroid) {
     tf::Vector3 centroid_vec(centroid->x, centroid->y, centroid->z);
     tf::Vector3 centroid_transformed = transform(centroid_vec);
     
-    ROS_INFO("ORIGINAL CENTROID:    (%.5f, %.5f, %.5f)", centroid->x, centroid->y, centroid->z);
-    ROS_INFO("TRANSFORMED CENTROID: (%.5f, %.5f, %.5f)", centroid_transformed.getX(), centroid_transformed.getY(), centroid_transformed.getZ());
+    geometry_msgs::Twist movement;
+    movement.linear.x = 0;
+    movement.linear.y = 0;
+    movement.linear.z = 0;
+    movement.angular.x = 0;
+    movement.angular.y = 0;
+    movement.angular.z = 0;
     
-    if(centroid_transformed.length() < 0.75) {
+    if(centroid_transformed.length() > 0.75) {
 	centroid_transformed = centroid_transformed.normalized();
-	geometry_msgs::Twist movement;
-	movement.linear.x = centroid_transformed.x();
-	movement.angular.x = centroid_transformed.y();
+	movement.linear.x = centroid_transformed.x()*0.5;
+	movement.angular.x = centroid_transformed.angle();
 	move_pub.publish(movement);
     }
+    
+    move_pub.publish(movement);
 }
