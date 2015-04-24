@@ -8,12 +8,12 @@
 #include <cmath>
 
 ros::Publisher move_pub;
+ros::Time lastCloud;
 
 void goToCentroid(const geometry_msgs::Vector3::ConstPtr&);
 
 int main(int argc, char** argv)
 {
-    // /cmd_vel_mux/input/teleop
     ros::init(argc, argv, "move_to_cap_node");
     
     ros::NodeHandle node;
@@ -21,11 +21,26 @@ int main(int argc, char** argv)
     ros::Subscriber centroid_sub = node.subscribe("detect_cap/centroid", 100, goToCentroid);
     move_pub = node.advertise<geometry_msgs::Twist>("cmd_vel", 100);
     
-    ros::Rate rate(10.0);
+    lastCloud = ros::Time::now();
+    
+    ros::Rate rate(12.0);
+    
+    while(ros::ok()) {
+	
+	if((ros::Time::now() - lastCloud).toSec() > 0.5) {
+	    geometry_msgs::Twist t;
+	    move_pub.publish(t);
+	}
+	
+	ros::spinOnce();
+	rate.sleep();
+    }
     ros::spin();
 }
 
 void goToCentroid(const geometry_msgs::Vector3::ConstPtr& centroid) {
+    lastCloud = ros::Time::now();
+    
     //Try to obtain
     tf::TransformListener listener;
     tf::StampedTransform transform;

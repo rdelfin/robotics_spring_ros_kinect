@@ -124,7 +124,7 @@ int main (int argc, char** argv)
 	    ROS_INFO("Neon cloud size: %ld", neon_cloud->points.size());
 	    
 	    //Same as checking if none are not a number
-	    if(!isnan(centroid(0)) && !isnan(centroid(1)) && !isnan(centroid(2))) {
+	    if(!isnan(centroid(0)) && !isnan(centroid(1)) && !isnan(centroid(2)) && neon_cloud->points.size() > 100) {
 		centroid_msg.x = centroid(0);
 		centroid_msg.y = centroid(1);
 		centroid_msg.z = centroid(2);
