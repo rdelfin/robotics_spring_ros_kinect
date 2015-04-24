@@ -95,8 +95,6 @@ int main (int argc, char** argv)
 	if (new_cloud_available_flag){
 	    new_cloud_available_flag = false;
 
-	    ROS_INFO("Before voxel grid filter: %i points",(int)cloud->points.size());
-
 	    // Voxel Grid reduces the computation time. Its a good idea to do it if you will be doing
 	    //sequential processing or frame-by-frame
 	    // Create the filtering object: downsample the dataset using a leaf size of 1cm
@@ -105,8 +103,6 @@ int main (int argc, char** argv)
 	    vg.setInputCloud (cloud);
 	    vg.setLeafSize (0.005f, 0.005f, 0.005f);
 	    vg.filter (*cloud_filtered);
-
-	    ROS_INFO("After voxel grid filter: %i points",(int)cloud_filtered->points.size());
 
 	    int max_num_neon = 0;
 
@@ -124,6 +120,8 @@ int main (int argc, char** argv)
 	    Eigen::Vector4f centroid;
 	    pcl::compute3DCentroid(*neon_cloud, centroid);
 	    geometry_msgs::Vector3 centroid_msg;
+	    
+	    ROS_INFO("Neon cloud size: %ld", neon_cloud->points.size());
 	    
 	    //Same as checking if none are not a number
 	    if(!isnan(centroid(0)) && !isnan(centroid(1)) && !isnan(centroid(2))) {
