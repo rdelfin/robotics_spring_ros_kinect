@@ -5,6 +5,7 @@
 #include "sensor_msgs/PointCloud2.h"
 #include "geometry_msgs/Vector3.h"
 #include "geometry_msgs/Twist.h"
+#include <cmath>
 
 ros::Publisher move_pub;
 
@@ -52,7 +53,7 @@ void goToCentroid(const geometry_msgs::Vector3::ConstPtr& centroid) {
     if(centroid_transformed.length() > 0.75) {
 	centroid_transformed = centroid_transformed.normalized();
 	movement.linear.x = centroid_transformed.x()*0.5;
-	movement.angular.x = centroid_transformed.angle();
+	movement.angular.x = atan2(centroid_transformed.y(), centroid_transformed.x());
 	move_pub.publish(movement);
     }
     
