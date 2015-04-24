@@ -57,20 +57,17 @@ void goToCentroid(const geometry_msgs::Vector3::ConstPtr& centroid) {
     tf::Vector3 centroid_vec(centroid->x, centroid->y, centroid->z);
     tf::Vector3 centroid_transformed = transform(centroid_vec);
     
+    int multFactor = (centroid_transformed.length() > 1 ? 1 : (centroid_transformed.length() < 0.75 ? -1 : 0));
+    centroid_transformed = centroid_transformed.normalized();
+    
     geometry_msgs::Twist movement;
-    movement.linear.x = 0;
+    
+    movement.linear.x = centroid_transformed.x()*0.3*multFactor;
     movement.linear.y = 0;
     movement.linear.z = 0;
     movement.angular.x = 0;
     movement.angular.y = 0;
-    movement.angular.z = 0;
-    
-    if(centroid_transformed.length() > 0.75) {
-	centroid_transformed = centroid_transformed.normalized();
-	movement.linear.x = centroid_transformed.x()*0.5;
-	movement.angular.x = atan2(centroid_transformed.y(), centroid_transformed.x());
-	move_pub.publish(movement);
-    }
+    movement.angular.z = atan2(centroid_transformed.y(), centroid_transformed.x()) * 0.5*multFactor;
     
     move_pub.publish(movement);
 }
