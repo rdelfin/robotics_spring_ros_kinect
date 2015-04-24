@@ -145,7 +145,7 @@ foreach(library ${libraries})
   endif()
 endforeach()
 
-set(move_to_cap_EXPORTED_TARGETS "")
+set(move_to_cap_EXPORTED_TARGETS "move_to_cap_generate_messages_cpp;move_to_cap_generate_messages_lisp;move_to_cap_generate_messages_py")
 # create dummy targets for exported code generation targets to make life of users easier
 foreach(t ${move_to_cap_EXPORTED_TARGETS})
   if(NOT TARGET ${t})
