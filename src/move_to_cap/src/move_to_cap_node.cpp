@@ -32,8 +32,8 @@ void goToCentroid(const geometry_msgs::Vector3::ConstPtr& centroid) {
     tf::StampedTransform transform;
     try{
 	ros::Time now = ros::Time::now();
-	listener.waitForTransform("base_footprint", "nav_kinect_optical_frame", now, ros::Duration(3.0));
-	listener.lookupTransform("base_footprint", "nav_kinect_optical_frame", now, transform);
+	listener.waitForTransform("base_footprint", "nav_kinect_depth_optical_frame", now, ros::Duration(3.0));
+	listener.lookupTransform("base_footprint", "nav_kinect_depth_optical_frame", now, transform);
     } catch (tf::TransformException ex){
 	ROS_ERROR("%s",ex.what());
 	ros::Duration(1.0).sleep();
