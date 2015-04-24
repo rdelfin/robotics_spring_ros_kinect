@@ -61,7 +61,8 @@ PointCloudT::Ptr computeNeonVoxels(PointCloudT::Ptr in) {
 	g = in->points[i].g;
 	b = in->points[i].b;
 	// Look for mostly neon value points
-	if (g > 150 && (r + b) < 250) {
+	//146,81,20
+	if (g > 100 && r < 100 && b < 70) {
 	    temp_neon_cloud->push_back(in->points[i]);
 	}
     }
