@@ -1,11 +1,12 @@
-#include "ros/ros.h"
+#include <ros/ros.h>
+#include <ros/publisher.h>
 #include <tf/tf.h>
 #include <tf/transform_listener.h>
 #include "sensor_msgs/PointCloud2.h"
 #include "geometry_msgs/Vector3.h"
 #include "geometry_msgs/Twist.h"
 
-//ros::Publisher move_pub;
+ros::Publisher move_pub;
 
 void goToCentroid(const geometry_msgs::Vector3::ConstPtr&);
 
@@ -17,7 +18,7 @@ int main(int argc, char** argv)
     ros::NodeHandle nh;
     
     ros::Subscriber centroid_sub = nh.subscribe("detect_cap/centroid", 100, goToCentroid);
-    //move_pub = nh.advertise<geometry_msgs::Twist>("cmd_vel", 100);
+    move_pub = nh.advertise<geometry_msgs::Twist>("cmd_vel", 100);
     
     ros::Rate rate(10.0);
     while (nh.ok()){
@@ -31,7 +32,7 @@ void goToCentroid(const geometry_msgs::Vector3::ConstPtr& centroid) {
     tf::TransformListener listener;
     tf::StampedTransform transform;
     try{
-	ros::Time now = ros::Time::now();
+	ros::Time now = ros::Time(0);
 	listener.waitForTransform("base_footprint", "nav_kinect_depth_optical_frame", now, ros::Duration(3.0));
 	listener.lookupTransform("base_footprint", "nav_kinect_depth_optical_frame", now, transform);
     } catch (tf::TransformException ex){
@@ -45,4 +46,12 @@ void goToCentroid(const geometry_msgs::Vector3::ConstPtr& centroid) {
     
     ROS_INFO("ORIGINAL CENTROID:    (%.5f, %.5f, %.5f)", centroid->x, centroid->y, centroid->z);
     ROS_INFO("TRANSFORMED CENTROID: (%.5f, %.5f, %.5f)", centroid_transformed.getX(), centroid_transformed.getY(), centroid_transformed.getZ());
+    
+    if(centroid_transformed.length() < 0.75) {
+	centroid_transformed = centroid_transformed.normalized();
+	geometry_msgs::Twist movement;
+	movement.linear.x = centroid_transformed.x();
+	movement.angular.x = centroid_transformed.y();
+	move_pub.publish(movement);
+    }
 }
