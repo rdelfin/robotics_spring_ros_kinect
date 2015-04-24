@@ -5,7 +5,6 @@
 #include "geometry_msgs/Vector3.h"
 #include "geometry_msgs/Twist.h"
 
-
 //ros::Publisher move_pub;
 
 void goToCentroid(const geometry_msgs::Vector3::ConstPtr&);
@@ -29,8 +28,10 @@ int main(int argc, char** argv)
 
 void goToCentroid(const geometry_msgs::Vector3::ConstPtr& centroid) {
     //Try to obtain
+    tf::TransformListener listener;
     tf::StampedTransform transform;
     try{
+	listener.lookupTransform("base_link", "nav_kinect_optical_frame", ros::Time(0), transform);
     }
     catch (tf::TransformException ex){
 	ROS_ERROR("%s",ex.what());
